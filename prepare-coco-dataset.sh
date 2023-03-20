@@ -1,3 +1,5 @@
+mkdir -p data/coco
+
 STAGE_DIR=coco
 
 echo "Downloading train2017.zip"
