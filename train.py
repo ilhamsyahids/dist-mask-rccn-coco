@@ -25,6 +25,7 @@ import presets
 import torch
 import torch.utils.data
 import torchvision
+import torchvision.models
 import torchvision.models.detection
 import torchvision.models.detection.mask_rcnn
 import utils
@@ -34,6 +35,7 @@ from group_by_aspect_ratio import create_aspect_ratio_groups, GroupedBatchSample
 from torchvision.transforms import InterpolationMode
 from transforms import SimpleCopyPaste
 
+from models import get_model
 
 def copypaste_collate_fn(batch):
     copypaste = SimpleCopyPaste(blending=True, resize_interpolation=InterpolationMode.BILINEAR)
@@ -166,6 +168,7 @@ def main(args):
     if args.output_dir:
         utils.mkdir(args.output_dir)
 
+    utils.init_random_seed()
     utils.init_distributed_mode(args)
     print(args)
 
@@ -216,10 +219,12 @@ def main(args):
     if "rcnn" in args.model:
         if args.rpn_score_thresh is not None:
             kwargs["rpn_score_thresh"] = args.rpn_score_thresh
-    model = torchvision.models.get_model(
+
+    model = get_model(
         args.model, weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, **kwargs
     )
     model.to(device)
+
     if args.distributed and args.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
@@ -280,8 +285,10 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
+        
         train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq, scaler)
         lr_scheduler.step()
+
         if args.output_dir:
             checkpoint = {
                 "model": model_without_ddp.state_dict(),

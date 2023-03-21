@@ -1,8 +1,10 @@
 import datetime
 import errno
 import os
+import random
 import time
 from collections import defaultdict, deque
+import numpy as np
 
 import torch
 import torch.distributed as dist
@@ -280,3 +282,9 @@ def init_distributed_mode(args):
     )
     torch.distributed.barrier()
     setup_for_distributed(args.rank == 0)
+
+def init_random_seed(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
