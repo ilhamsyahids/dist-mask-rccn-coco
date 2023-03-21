@@ -3,7 +3,7 @@ import torch.distributed as dist
 import datetime
 import time
 
-from dist import is_dist_avail_and_initialized
+from utils.dist import is_dist_avail_and_initialized
 from collections import defaultdict, deque
 
 

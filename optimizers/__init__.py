@@ -1,7 +1,7 @@
 import torch
 import torch.optim
 
-def get_optimizer(opt: str, parameters, lr: float, weight_decay: float, **args):
+def get_optimizer(opt: str, parameters, lr: float, weight_decay: float, **kwargs):
     opt_name = opt.lower()
     if opt_name.startswith("sgd"):
         optimizer = torch.optim.SGD(
@@ -9,7 +9,7 @@ def get_optimizer(opt: str, parameters, lr: float, weight_decay: float, **args):
             lr=lr,
             weight_decay=weight_decay,
             nesterov="nesterov" in opt_name,
-            momentum=args['momentum'],
+            momentum=kwargs['momentum'],
         )
     elif opt_name == "adamw":
         optimizer = torch.optim.AdamW(

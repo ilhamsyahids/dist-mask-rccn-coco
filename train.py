@@ -245,12 +245,13 @@ def main(args):
         wd_groups = [args.norm_weight_decay, args.weight_decay]
         parameters = [{"params": p, "weight_decay": w} for p, w in zip(param_groups, wd_groups) if p]
 
+    kwargs = {"momentum": args.momentum}
     optimizer = get_optimizer(
         args.opt,
         parameters=parameters,
         lr=args.lr,
         weight_decay=args.weight_decay,
-        args=args
+        **kwargs
     )
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
