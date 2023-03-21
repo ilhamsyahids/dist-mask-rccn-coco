@@ -29,17 +29,18 @@ import torchvision.models.detection
 import torchvision.models.detection.mask_rcnn
 import torchvision.ops._utils
 
+from torchvision.transforms import InterpolationMode
+from transforms import SimpleCopyPaste
+
 import utils
 import utils.dist
 import presets
 
-from torchvision.transforms import InterpolationMode
-from transforms import SimpleCopyPaste
+from models import get_model
+from optimizers import get_optimizer
 from dataset.coco import get_coco, get_coco_kp
 from engine import evaluate, train_one_epoch
 from group_by_aspect_ratio import create_aspect_ratio_groups, GroupedBatchSampler
-
-from models import get_model
 
 def copypaste_collate_fn(batch):
     copypaste = SimpleCopyPaste(blending=True, resize_interpolation=InterpolationMode.BILINEAR)
@@ -244,19 +245,13 @@ def main(args):
         wd_groups = [args.norm_weight_decay, args.weight_decay]
         parameters = [{"params": p, "weight_decay": w} for p, w in zip(param_groups, wd_groups) if p]
 
-    opt_name = args.opt.lower()
-    if opt_name.startswith("sgd"):
-        optimizer = torch.optim.SGD(
-            parameters,
-            lr=args.lr,
-            momentum=args.momentum,
-            weight_decay=args.weight_decay,
-            nesterov="nesterov" in opt_name,
-        )
-    elif opt_name == "adamw":
-        optimizer = torch.optim.AdamW(parameters, lr=args.lr, weight_decay=args.weight_decay)
-    else:
-        raise RuntimeError(f"Invalid optimizer {args.opt}. Only SGD and AdamW are supported.")
+    optimizer = get_optimizer(
+        args.opt,
+        parameters=parameters,
+        lr=args.lr,
+        weight_decay=args.weight_decay,
+        args=args
+    )
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
 
