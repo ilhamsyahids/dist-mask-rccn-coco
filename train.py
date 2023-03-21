@@ -27,8 +27,10 @@ import torchvision
 import torchvision.models
 import torchvision.models.detection
 import torchvision.models.detection.mask_rcnn
+import torchvision.ops._utils
 
 import utils
+import utils.dist
 import presets
 
 from torchvision.transforms import InterpolationMode
@@ -171,7 +173,7 @@ def main(args):
         utils.mkdir(args.output_dir)
 
     utils.init_random_seed()
-    utils.init_distributed_mode(args)
+    utils.dist.init_distributed_mode(args)
     print(args)
 
     device = torch.device(args.device)
@@ -301,8 +303,8 @@ def main(args):
             }
             if args.amp:
                 checkpoint["scaler"] = scaler.state_dict()
-            utils.save_on_master(checkpoint, os.path.join(args.output_dir, f"model_{epoch}.pth"))
-            utils.save_on_master(checkpoint, os.path.join(args.output_dir, "checkpoint.pth"))
+            utils.dist.save_on_master(checkpoint, os.path.join(args.output_dir, f"model_{epoch}.pth"))
+            utils.dist.save_on_master(checkpoint, os.path.join(args.output_dir, "checkpoint.pth"))
 
         # evaluate after every epoch
         evaluate(model, data_loader_test, device=device)
